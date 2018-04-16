@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:hn_flutter/domain/item.dart';
 
 class HNHomePage extends StatefulWidget {
   HNHomePage({Key key, this.title}) : super(key: key);
@@ -20,7 +21,23 @@ class HNHomePage extends StatefulWidget {
 }
 
 class _HNHomePageState extends State<HNHomePage> {
-  int _counter = 0;
+  List<HNItem> items = new List<HNItem>.generate(500, (i) =>
+      new HNItem(
+          i,
+          "foo",
+          "internet_dude",
+          DateTime.now().millisecondsSinceEpoch,
+          "Something on the internet sparks controversy",
+          -1,
+          -1,
+          new List<int>(),
+          "https://google.com",
+          42,
+          "Clickbait title",
+          new List<int>(),
+          new List<int>()
+      )
+  );
 
   void refresh() {
     // perform refresh here
@@ -40,34 +57,15 @@ class _HNHomePageState extends State<HNHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: new Text(widget.title),
       ),
-      body: new Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: new Column(
-          // Column is also layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug paint" (press "p" in the console where you ran
-          // "flutter run", or select "Toggle Debug Paint" from the Flutter tool
-          // window in IntelliJ) to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            new Text(
-              'You have pushed the button this many times:',
-            ),
-            new Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
-        ),
+      body: new ListView.builder(
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            var item = items[index];
+            return new ListTile(
+              title: new Text(item.title),
+              subtitle: new Text(item.text),
+            );
+          }
       ),
       floatingActionButton: new FloatingActionButton(
         onPressed: refresh,
