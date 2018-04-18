@@ -22,8 +22,9 @@ class HNHomePage extends StatefulWidget {
 }
 
 class _HNHomePageState extends State<HNHomePage> {
-  List<HNItem> items = new List<HNItem>.generate(500, (i) =>
-      new HNItem(
+  List<HNItem> items = new List<HNItem>.generate(
+      500,
+      (i) => new HNItem(
           i,
           "foo",
           "internet_dude",
@@ -36,9 +37,7 @@ class _HNHomePageState extends State<HNHomePage> {
           42,
           "Clickbait title",
           new List<int>(),
-          new List<int>()
-      )
-  );
+          new List<int>()));
 
   void refresh() {
     // perform refresh here
@@ -63,11 +62,12 @@ class _HNHomePageState extends State<HNHomePage> {
           itemBuilder: (context, index) {
             var item = items[index];
             return new ListTile(
-              title: new Text(newsItemTitle(index + 1, item.title, item.url)),
-              subtitle: new Text(newsItemSubTitle(item.score, item.by, new DateTime.fromMillisecondsSinceEpoch(item.time*1000, isUtc: true), item.descendants.length)),
+              title: new Text.rich(
+                  newsItemTitle(index + 1, item.title, item.getURLDomain())),
+              subtitle: new Text.rich(newsItemSubTitle(item.score, item.by,
+                  item.getTime(), item.descendants.length)),
             );
-          }
-      ),
+          }),
       floatingActionButton: new FloatingActionButton(
         onPressed: refresh,
         tooltip: 'Refresh',

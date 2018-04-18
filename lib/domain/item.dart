@@ -33,4 +33,12 @@ class HNItem {
       this.title,
       this.parts,
       this.descendants);
+
+  String getURLDomain() {
+    return Uri.parse(url).host;
+  }
+
+  DateTime getTime() {
+    return new DateTime.fromMillisecondsSinceEpoch(time * 1000, isUtc: true);
+  }
 }
