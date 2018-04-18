@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:hn_flutter/domain/item.dart';
+import 'package:hn_flutter/ui/strings.dart';
 
 class HNHomePage extends StatefulWidget {
   HNHomePage({Key key, this.title}) : super(key: key);
@@ -26,7 +27,7 @@ class _HNHomePageState extends State<HNHomePage> {
           i,
           "foo",
           "internet_dude",
-          DateTime.now().millisecondsSinceEpoch,
+          1524004872,
           "Something on the internet sparks controversy",
           -1,
           -1,
@@ -62,8 +63,8 @@ class _HNHomePageState extends State<HNHomePage> {
           itemBuilder: (context, index) {
             var item = items[index];
             return new ListTile(
-              title: new Text(item.title),
-              subtitle: new Text(item.text),
+              title: new Text(newsItemTitle(index + 1, item.title, item.url)),
+              subtitle: new Text(newsItemSubTitle(item.score, item.by, new DateTime.fromMillisecondsSinceEpoch(item.time*1000, isUtc: true), item.descendants.length)),
             );
           }
       ),
