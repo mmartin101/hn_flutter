@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
     return new MaterialApp(
       title: 'HN Flutter App',
       theme: appTheme(),
-      home: new HNHomePage(title: 'Flutter Demo Home Page'),
+      home: new HNHomePage(title: 'HN Flutter'),
     );
   }
 }

@@ -6,21 +6,20 @@
 /// and live under /v0/item/[id].
 class HNItem {
   int id;
-  final String type;
-  final String by;
+  String type;
+  String by;
   int time;
-  final String text;
+  String text;
   int parent;
   int poll;
-  List<int> kids;
-  final String url;
+  List kids;
+  String url;
   int score;
-  final String title;
-  List<int> parts;
-  List<int> descendants;
+  String title;
+  List parts;
+  int descendants;
 
-  HNItem(
-      this.id,
+  HNItem(this.id,
       this.type,
       this.by,
       this.time,
@@ -35,10 +34,44 @@ class HNItem {
       this.descendants);
 
   String getURLDomain() {
-    return Uri.parse(url).host;
+    if (url == null) {
+      return "";
+    }
+
+    return Uri
+        .parse(url)
+        .host;
   }
 
   DateTime getTime() {
     return new DateTime.fromMillisecondsSinceEpoch(time * 1000, isUtc: true);
   }
+
+  HNItem.fromJson(Map<String, dynamic> json)
+      : id = json['id'],
+        type = json['type'],
+        by = json['by'],
+        time = json['time'],
+        kids = json['kids'],
+        url = json['url'],
+        score = json['score'],
+        title = json['title'],
+        descendants = json['descendants'];
+
+  @override
+  String toString() {
+    return '''{
+    id: $id,
+    type: $type,
+    by: $by,
+    time: $time,
+    kids: $kids,
+    url: $url,
+    score: $score,
+    title: $title,
+    descendants: $descendants
+        }''';
+  }
+
+
 }

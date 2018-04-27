@@ -2,6 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:hn_flutter/domain/item.dart';
 import 'package:hn_flutter/ui/strings.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:url_launcher/url_launcher.dart' as urlLauncher;
 
 class HNHomePage extends StatefulWidget {
   HNHomePage({Key key, this.title}) : super(key: key);
@@ -22,57 +25,100 @@ class HNHomePage extends StatefulWidget {
 }
 
 class _HNHomePageState extends State<HNHomePage> {
-  List<HNItem> items = new List<HNItem>.generate(
-      500,
-      (i) => new HNItem(
-          i,
-          "foo",
-          "internet_dude",
-          1524004872,
-          "Something on the internet sparks controversy",
-          -1,
-          -1,
-          new List<int>(),
-          "https://google.com",
-          42,
-          "Clickbait title",
-          new List<int>(),
-          new List<int>()));
+  List<HNItem> items = new List<HNItem>();
+  List<dynamic> idList = new List<dynamic>();
+  int pageSize = 25;
+  int lastIndex = 0;
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
 
   void refresh() {
     // perform refresh here
+    if (loading) return;
+    idList.clear();
+    if (items.isNotEmpty) items.clear();
+    loadData();
+  }
+
+  // TODO: is this the best way to load items from the network?
+  // should we get the top stories and load the first page (25 items?) then once
+  // thats done, load the rest in the background? i feel like this current
+  // implemntation could be more efficient... it makes the app seem slow when using it
+  loadData() async {
+    setState(() {
+      loading = true;
+    });
+
+    String url = "https://hacker-news.firebaseio.com/v0/";
+    if (idList.isEmpty) {
+      http.Response response = await http.get(url + "topstories.json");
+      idList = json.decode(response.body);
+    }
+
+    List<HNItem> newItems = new List<HNItem>();
+    for (var i = lastIndex; i < lastIndex + pageSize; ++i) {
+      var id = idList[i];
+      http.Response itemResponse = await http.get(url + 'item/$id.json');
+      newItems.add(HNItem.fromJson(json.decode(itemResponse.body)));
+    }
+    
+    lastIndex += pageSize;
+    setState(() {
+      items.addAll(newItems);
+      loading = false;
+    });
+  }
+
+  Widget showLoadingIndicator() {
+    print("is loading? $loading");
+    return loading ? new CircularProgressIndicator() : new Container();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return new Scaffold(
       appBar: new AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: new Text(widget.title),
       ),
-      body: new ListView.builder(
-          itemCount: items.length,
-          itemBuilder: (context, index) {
-            var item = items[index];
-            return new ListTile(
-              title: new Text.rich(
-                  newsItemTitle(index + 1, item.title, item.getURLDomain())),
-              subtitle: new Text.rich(newsItemSubTitle(item.score, item.by,
-                  item.getTime(), item.descendants.length)),
-            );
-          }),
+      body: new Stack(
+        children: <Widget>[
+          new ListView.builder(
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                if (!loading && index + 5 > items.length) {
+                  loadData();
+                }
+
+                var item = items[index];
+                return new ListTile(
+                  title: new Text.rich(newsItemTitle(
+                      index + 1, item.title, item.getURLDomain())),
+                  subtitle: new Text.rich(newsItemSubTitle(
+                      item.score, item.by, item.getTime(), item.descendants)),
+                  onTap: () { openUrl(item.url); },
+                );
+              }),
+          new Center(
+            child: showLoadingIndicator(),
+          )
+        ],
+      ),
       floatingActionButton: new FloatingActionButton(
         onPressed: refresh,
         tooltip: 'Refresh',
         child: new Icon(Icons.refresh),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  void openUrl(String url) async {
+    if (url != null && url.isNotEmpty && await urlLauncher.canLaunch(url)) {
+      await urlLauncher.launch(url);
+    }
   }
 }

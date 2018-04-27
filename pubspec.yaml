@@ -1,5 +1,5 @@
 name: hn_flutter
-description: A new Flutter project.
+description: A Hacker News frontend in Flutter!
 
 dependencies:
   flutter:
@@ -8,6 +8,9 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.0
+
+  http: '>=0.11.3+16'
+  url_launcher: '^3.0.0'
 
 dev_dependencies:
   flutter_test:
