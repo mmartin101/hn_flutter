@@ -1,8 +1,9 @@
 # hn_flutter
 
-A new Flutter project.
+Hacker News App built with Flutter. Just loads the top stories from /topstories and has a button to refresh the list.
+Tapping on a story will open the link in the device's default browser.
 
-## Getting Started
-
-For help getting started with Flutter, view our online
-[documentation](https://flutter.io/).
+Todo:
+- Add support for other lists (best, newest, ask hn, jobs, etc)
+- Filtering (by title, domain, date (not sure))
+- animations?

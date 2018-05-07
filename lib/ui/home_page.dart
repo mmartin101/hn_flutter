@@ -1,13 +1,15 @@
+import 'dart:async';
+
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:hn_flutter/domain/item.dart';
 import 'package:hn_flutter/ui/strings.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:url_launcher/url_launcher.dart' as urlLauncher;
 
 class HNHomePage extends StatefulWidget {
-  HNHomePage({Key key, this.title}) : super(key: key);
+  HNHomePage({Key key, this.title, this.firebaseApp}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -19,6 +21,7 @@ class HNHomePage extends StatefulWidget {
   // always marked "final".
 
   final String title;
+  final FirebaseApp firebaseApp;
 
   @override
   _HNHomePageState createState() => new _HNHomePageState();
@@ -26,57 +29,64 @@ class HNHomePage extends StatefulWidget {
 
 class _HNHomePageState extends State<HNHomePage> {
   List<HNItem> items = new List<HNItem>();
-  List<dynamic> idList = new List<dynamic>();
-  int pageSize = 25;
-  int lastIndex = 0;
   bool loading = true;
+  CircularProgressIndicator progressIndicator = new CircularProgressIndicator();
+  Container empty = new Container();
+  FirebaseDatabase database;
 
   @override
   void initState() {
     super.initState();
+    database = FirebaseDatabase(app: widget.firebaseApp);
     loadData();
   }
 
   void refresh() {
     // perform refresh here
     if (loading) return;
-    idList.clear();
     if (items.isNotEmpty) items.clear();
     loadData();
   }
 
-  // TODO: is this the best way to load items from the network?
-  // should we get the top stories and load the first page (25 items?) then once
-  // thats done, load the rest in the background? i feel like this current
-  // implemntation could be more efficient... it makes the app seem slow when using it
   loadData() async {
     setState(() {
       loading = true;
     });
 
-    String url = "https://hacker-news.firebaseio.com/v0/";
-    if (idList.isEmpty) {
-      http.Response response = await http.get(url + "topstories.json");
-      idList = json.decode(response.body);
+    if (items.isEmpty) {
+      database.reference().child('v0/topstories').limitToFirst(500).once().then(
+          (DataSnapshot snapshot) {
+        getItems(snapshot.value).then(appendItems);
+      }, onError: (error) {
+        print(error);
+      });
     }
+  }
 
-    List<HNItem> newItems = new List<HNItem>();
-    for (var i = lastIndex; i < lastIndex + pageSize; ++i) {
-      var id = idList[i];
-      http.Response itemResponse = await http.get(url + 'item/$id.json');
-      newItems.add(HNItem.fromJson(json.decode(itemResponse.body)));
-    }
-    
-    lastIndex += pageSize;
+  appendItems(List<HNItem> value) {
     setState(() {
-      items.addAll(newItems);
+      items.addAll(value);
+      print(items.length);
       loading = false;
     });
   }
 
+  Future<List<HNItem>> getItems(List<dynamic> idList) async {
+    DatabaseReference ref = database.reference().child("v0/item");
+    Completer<List<HNItem>> completer = new Completer<List<HNItem>>();
+
+    Future
+        .wait(idList.map((id) => ref
+            .child(id.toString())
+            .once()
+            .then((snapshot) => HNItem.fromJson(snapshot.value))))
+        .then((value) => completer.complete(value));
+
+    return completer.future;
+  }
+
   Widget showLoadingIndicator() {
-    print("is loading? $loading");
-    return loading ? new CircularProgressIndicator() : new Container();
+    return loading ? progressIndicator : empty;
   }
 
   @override
@@ -90,17 +100,15 @@ class _HNHomePageState extends State<HNHomePage> {
           new ListView.builder(
               itemCount: items.length,
               itemBuilder: (context, index) {
-                if (!loading && index + 5 > items.length) {
-                  loadData();
-                }
-
                 var item = items[index];
                 return new ListTile(
                   title: new Text.rich(newsItemTitle(
                       index + 1, item.title, item.getURLDomain())),
                   subtitle: new Text.rich(newsItemSubTitle(
                       item.score, item.by, item.getTime(), item.descendants)),
-                  onTap: () { openUrl(item.url); },
+                  onTap: () {
+                    openUrl(item.getUrl());
+                  },
                 );
               }),
           new Center(

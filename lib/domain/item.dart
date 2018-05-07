@@ -19,7 +19,8 @@ class HNItem {
   List parts;
   int descendants;
 
-  HNItem(this.id,
+  HNItem(
+      this.id,
       this.type,
       this.by,
       this.time,
@@ -34,20 +35,22 @@ class HNItem {
       this.descendants);
 
   String getURLDomain() {
-    if (url == null) {
+    if (url == null || url.startsWith("https://news.ycombinator.com")) {
       return "";
     }
 
-    return Uri
-        .parse(url)
-        .host;
+    return Uri.parse(url).host;
+  }
+
+  String getUrl() {
+    return url == null ? "https://news.ycombinator.com/item?id=$id" : url;
   }
 
   DateTime getTime() {
     return new DateTime.fromMillisecondsSinceEpoch(time * 1000, isUtc: true);
   }
 
-  HNItem.fromJson(Map<String, dynamic> json)
+  HNItem.fromJson(Map<dynamic, dynamic> json)
       : id = json['id'],
         type = json['type'],
         by = json['by'],
@@ -73,5 +76,10 @@ class HNItem {
         }''';
   }
 
-
+  @override
+  bool operator ==(dynamic other) {
+    if (identical(this, other)) return true;
+    if (other is! HNItem) return false;
+    return other.id == id;
+  }
 }
