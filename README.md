@@ -5,5 +5,6 @@ Tapping on a story will open the link in the device's default browser.
 
 Todo:
 - Add support for other lists (best, newest, ask hn, jobs, etc)
+- Add support for viewing comments
 - Filtering (by title, domain, date (not sure))
 - animations?
