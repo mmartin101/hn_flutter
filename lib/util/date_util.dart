@@ -1,3 +1,5 @@
+/// Utilities for dates
+///
 String getRelativeTimeSpanString(DateTime from, DateTime then) {
   Duration duration = then.difference(from);
   String result;
